@@ -42,7 +42,6 @@ Forecasting is done with a linear combination of differenced observations and er
 When we stationarize a series, we assume that we can then forecast more successfully, so the ARIMA method automatically performs differencing to stationarize the series.
 
 ARIMA is suitable for data with univariate trend but no seasonality.
-
 p: number of real value lags (autoregressive degree) If p = 2, yt-1 and yt-2 are in the model.
 d: number of difference operations (difference degree, I)
 q: number of error lags (moving average degree)
