@@ -155,3 +155,96 @@ y_pred = pd.Series(y_pred, index = test.index)
 
 
 plot_co2(train, test, y_pred, "ARIMA")
+
+
+
+#?############################################################
+#? SARIMA (p,d,q) (P,D,Q)m
+#? Seasonal AutoRegressive Integrated Moving Average
+#?############################################################
+"""
+ (p,d,q)-> ARIMA parameters
+(P,D,Q) -> SARIMA parameters
+ m -> Seasonality Parameter
+
+SARIMA = ARIMA + Seasonality
+Trend ve/veya mevsimsellik içeren tek değişkenli serilerde kullanılabilir.
+Diğer istatistiksel metotlara göre en gelişmiş metottur.
+p,d,q ARIMA'dan gelen parametrelerdir. #!Trend elemanlarıdır.
+ARIMA trendi modelleyebilir.
+
+p: gerçek değer gecikme sayıısı (oto regresif derece) 
+p=2 ise yt-1 ve yt-2 modeldedir.
+
+d: fark işlemi sayısı (fark derecesi, I) -> durağanlaştırma için.
+
+q: hata gecikme sayısı (hareketli ortalama derecesi)
+q=2 ise et-1 ve et-2 modeldedir.
+
+P,D,Q mevsimsel gecikme sayularıdır. #! Season elemanlarıdır.
+
+m: tek bir mevsimlik dönem için zaman adımı sayısı. Mevsimselliğin görülme yapısını ifade eder.
+
+
+Durağan: SES,AR, MA, ARMA
+Trend: DES, ARIMA
+Trend ve Mevsimsellik: TES, SARIMA
+"""
+
+
+#?##########################################################################
+#? SARIMA MODEL (Seasonal AutoRegressive Integrated Moving Average)
+#?##########################################################################
+
+sarima_model = SARIMAX(train, order = (1,1,1), seasonal_order = (0,0,0,12))
+sarima_model = sarima_model.fit()
+
+y_pred_test = sarima_model.get_forecast(steps=48)
+
+y_pred = y_pred_test.predicted_mean
+
+y_pred = pd.Series(y_pred, index = test.index)
+
+plot_co2(train, test, y_pred, "SARIMA")
+
+#?#############################################################
+#? Hyperparameter Optimization (Determining model degrees)
+#?#############################################################
+p = d = q = range(0,2)
+
+pdq = list(itertools.product(p,d,q))
+
+seasonal_pdq = [(x[0], x[1], x[2], 12) for x in list(itertools.product(p,d,q))]
+
+def sarima_optimizer_aic(train, pdq, seasonal_pdq):
+    best_aic, best_order, best_seasonal_order = float("inf"), float("inf"), None
+    for param in pdq:
+        for param_seasonal in seasonal_pdq:
+            try:
+                sarimax_model = SARIMAX(train, order= param, seasonal_order=param_seasonal)
+                results = sarimax_model.fit()
+                aic = results.aic
+                if aic < best_aic:
+                    best_aic, best_order, best_seasonal_order = aic, param, param_seasonal
+                print("SARIMA{}x{}12 - AIC:{}".format(param, param_seasonal, aic))
+            except:
+                continue
+    print("SARIMA {}x{}12 - AIC:{}".format(best_order, best_seasonal_order, best_aic))
+    return best_order, best_seasonal_order
+
+best_order, best_seasonal_order = sarima_optimizer_aic(train, pdq, seasonal_pdq)
+
+
+#?#####################
+#? Final Model
+#?#######################
+
+model = SARIMAX(train, order=best_order, seasonal_order=best_seasonal_order)
+sarima_final_model = model.fit()
+
+y_pred_test = sarima_final_model.get_forecast(steps=48)
+
+y_pred = y_pred_test.predicted_mean
+y_pred = pd.Series(y_pred, index = test.index)
+
+plot_co2(train, test, y_pred, "SARIMA")
