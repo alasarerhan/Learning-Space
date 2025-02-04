@@ -233,3 +233,26 @@ def sarima_optimizer_aic(train, pdq, seasonal_pdq):
                 continue
     print("SARIMA {}x{}12 - AIC:{}".format(best_order, best_seasonal_order, best_aic))
     return best_order, best_seasonal_order
+
+
+#! Sarima Optimizer Function with MAE
+def sarima_optimizer_mae(train, pdq, seasonal_pdq):
+best_mae, best_order, best_seasonal_order = float("inf"), float("inf"), None
+for param in pdq:
+    for param_seasonal in seasonal_pdq:
+        try:
+            model = SARIMAX(train, order=param, seasonal_order=param_seasonal)
+            sarima_model = model.fit()
+            y_pred_test = sarima_model.get_forecast(steps=48)
+            y_pred = y_pred_test.predicted_mean
+            mae = mean_absolute_error(test, y_pred)
+
+            #mae = fit_model_sarima(train, val, param, param_seasonal)
+
+            if mae < best_mae:
+                best_mae, best_order, best_seasonal_order = mae, param, param_seasonal
+            print("SARIMA{}x{}12 - MAE:{}".format(param, param_seasonal, mae))
+        except:
+            continue
+print("SARIMA{}x{}12 - MAE:{}".format(best_order, best_seasonal_order, best_mae))
+return best_order, best_seasonal_order
