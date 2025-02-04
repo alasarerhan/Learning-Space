@@ -215,3 +215,21 @@ def arima_optimizer(train, orders):
             continue
     print("Best ARIMA%s AIC=%.2f" % (best_params, best_aic))
     return best_params
+
+
+#! SARIMA Optimizer Function
+def sarima_optimizer_aic(train, pdq, seasonal_pdq):
+    best_aic, best_order, best_seasonal_order = float("inf"), float("inf"), None
+    for param in pdq:
+        for param_seasonal in seasonal_pdq:
+            try:
+                sarimax_model = SARIMAX(train, order= param, seasonal_order=param_seasonal)
+                results = sarimax_model.fit()
+                aic = results.aic
+                if aic < best_aic:
+                    best_aic, best_order, best_seasonal_order = aic, param, param_seasonal
+                print("SARIMA{}x{}12 - AIC:{}".format(param, param_seasonal, aic))
+            except:
+                continue
+    print("SARIMA {}x{}12 - AIC:{}".format(best_order, best_seasonal_order, best_aic))
+    return best_order, best_seasonal_order

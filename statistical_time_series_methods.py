@@ -149,7 +149,7 @@ best_params_aic = arima_optimizer(train, pdq)
 #? Final Model
 #?#######################
 
-arima_model = ARIMA(train, best_params_aic).fit()
+arima_model = ARIMA(train, order=best_params_aic).fit()
 y_pred = arima_model.forecast(steps=48)
 y_pred = pd.Series(y_pred, index = test.index)
 
