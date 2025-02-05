@@ -42,10 +42,10 @@ def check_df(dataframe, head=5, tail=5, quan=True):
 #! Loading the data
 #!######################################
 
-train = pd.read_csv("D:/Çalışmalar/Miuul/Time Series/time_series/datasets/demand_forecasting/train.csv", parse_dates=['date'])
-test = pd.read_csv("D:/Çalışmalar/Miuul/Time Series/time_series/datasets/demand_forecasting/test.csv",parse_dates=['date'])
+train = pd.read_csv("datapath/train.csv", parse_dates=['date'])
+test = pd.read_csv("datapath/test.csv",parse_dates=['date'])
 
-sample_sub = pd.read_csv("D:/Çalışmalar/Miuul/Time Series/time_series/datasets/demand_forecasting/sample_submission.csv")
+sample_sub = pd.read_csv("datapath/sample_submission.csv")
 
 df = pd.concat([train,test], sort=False)
 

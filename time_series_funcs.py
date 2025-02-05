@@ -46,7 +46,7 @@ def ts_decompose(y, model='additive',stationary=False):
     plt.tight_layout()
     plt.show(block=True)
 
-    if stationary:s
+    if stationary:
         is_stationary(y)
 
 
@@ -62,7 +62,7 @@ def plot_co2(train, test, y_pred, title):
 def ses_optimizer(train, alphas, step=48):
     best_alpha, best_mae = None, float("inf")
     for alpha in alphas:
-        mpdel = SimpleExpSmoothing(train).fit(smoothing_level=alpha)
+        model = SimpleExpSmoothing(train).fit(smoothing_level=alpha)
         y_pred = model.forecast(step)
         mae = mean_absolute_error(test, y_pred)
         if mae < best_mae:
@@ -202,9 +202,9 @@ def plot_lgb_importances(model, plot=False,num=10):
 
 
 #! ARIMA Optimizer Function
-def arima_optimizer(train, orders):
+def arima_optimizer_aic(train, orders):
     best_aic, best_params = float("inf"), None
-    for order in prders:
+    for order in orders:
         try:
             arima_model_result = ARIMA(train, order = order).fit()
             aic = arima_model_result.aic
@@ -256,3 +256,10 @@ for param in pdq:
             continue
 print("SARIMA{}x{}12 - MAE:{}".format(best_order, best_seasonal_order, best_mae))
 return best_order, best_seasonal_order
+
+#! Plotting Prediction
+def plot_prediction(y_pred, label):
+    train['total_passengers'].plot(legend=True, label='TRAIN')
+    test['total_passengers'].plot(legend=True, label='TEST')
+    y_pred.plot(legend=True, label='PREDICTION')
+    plt.title('Train, Test and Predicted Test using {}'.format(label))
