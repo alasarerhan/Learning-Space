@@ -9,6 +9,9 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 
 
+
+
+
 #! Durağanlık testi (Dickey-Fuller testi)
 def is_stationary(y):
 
@@ -263,3 +266,59 @@ def plot_prediction(y_pred, label):
     test['total_passengers'].plot(legend=True, label='TEST')
     y_pred.plot(legend=True, label='PREDICTION')
     plt.title('Train, Test and Predicted Test using {}'.format(label))
+
+
+#! Creating date features
+def create_date_features(df, date_column):
+    df['month'] = df[date_column].dt.month
+    df['day_of_month'] = df[date_column].dt.day
+    df['day_of_year'] = df[date_column].dt.dayofyear
+    df['week_of_year'] = df[date_column].dt.isocalendar().week
+    df['day_of_week'] = df[date_column].dt.dayofweek
+    df['year'] = df[date_column].dt.year
+    df["is_wknd"] = df[date_column].dt.weekday // 4
+    df['is_month_start'] = df[date_column].dt.is_month_start.astype(int)
+    df['is_month_end'] = df[date_column].dt.is_month_end.astype(int)
+    df['quarter'] = df[date_column].dt.quarter
+    df['is_quarter_start'] = df[date_column].dt.is_quarter_start.astype(int)
+    df['is_quarter_end'] = df[date_column].dt.is_quarter_end.astype(int)
+    df['is_year_start'] = df[date_column].dt.is_year_start.astype(int)
+    df['is_year_end'] = df[date_column].dt.is_year_end.astype(int)
+    return df
+
+#! Creating lag/shifted features
+def random_noise(dataframe):
+    return np.random.normal(scale=1.6, size=(len(dataframe),))
+
+
+def lag_features(dataframe, lags):
+    for lag in lags:
+        dataframe['sales_lag_' + str(lag)] = dataframe.groupby(["merchant_id"])['Total_Transaction'].transform(
+            lambda x: x.shift(lag)) + random_noise(dataframe)
+    return dataframe
+
+
+
+#! Creating Exponentially Weighted Mean Features
+def ewm_features(dataframe, alphas, lags):
+    for alpha in alphas:
+        for lag in lags:
+            dataframe['sales_ewm_alpha_' + str(alpha).replace(".", "") + "_lag_" + str(lag)] = \
+                dataframe.groupby(["merchant_id"])['Total_Transaction'].transform(lambda x: x.shift(lag).ewm(alpha=alpha).mean())
+    return dataframe
+
+#! Smape
+def smape(preds, target):
+    n = len(preds)
+    masked_arr = ~((preds == 0) & (target == 0))
+    preds, target = preds[masked_arr], target[masked_arr]
+    num = np.abs(preds - target)
+    denom = np.abs(preds) + np.abs(target)
+    smape_val = (200 * np.sum(num / denom)) / n
+    return smape_val
+
+
+def lgbm_smape(preds, train_data):
+    labels = train_data.get_label()
+    smape_val = smape(np.expm1(preds), np.expm1(labels))
+    return 'SMAPE', smape_val, False
